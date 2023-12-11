@@ -1,0 +1,27 @@
+UltimaHoraPorDataFiltrada = 
+CALCULATETABLE (
+    'public RiverQuota',
+    FILTER (
+        ALL('public RiverQuota'),
+        'public RiverQuota'[HoraFormatada] = CALCULATE(
+            MAX('public RiverQuota'[HoraFormatada]),
+            FILTER(
+                'public RiverQuota',
+                'public RiverQuota'[NovaColunaDataFormatada] = EARLIER('public RiverQuota'[NovaColunaDataFormatada]) &&
+                'public RiverQuota'[condition-cityId-BI] = EARLIER('public RiverQuota'[condition-cityId-BI]) &&
+                ISBLANK('public RiverQuota'[deletedAt])
+            )
+        ) &&
+        ISBLANK('public RiverQuota'[deletedAt]) &&
+        'public RiverQuota'[createdAtServer] = CALCULATE(
+            MAX('public RiverQuota'[createdAtServer]),
+            FILTER(
+                'public RiverQuota',
+                'public RiverQuota'[NovaColunaDataFormatada] = EARLIER('public RiverQuota'[NovaColunaDataFormatada]) &&
+                'public RiverQuota'[condition-cityId-BI] = EARLIER('public RiverQuota'[condition-cityId-BI]) &&
+                'public RiverQuota'[HoraFormatada] = EARLIER('public RiverQuota'[HoraFormatada]) &&
+                ISBLANK('public RiverQuota'[deletedAt])
+            )
+        )
+    )
+)
