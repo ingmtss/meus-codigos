@@ -1,0 +1,60 @@
+svg {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes slideLeftToRight {
+    0% { opacity: 0; transform: translateX(-100px); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideRightToLeft {
+    0% { opacity: 0; transform: translateX(100px); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+
+#nome_defesa {
+    animation: fadeIn 2s ease-in forwards;
+    fill: black;
+}
+
+#nome_apresenta {
+    animation: fadeIn 1s ease-in forwards;
+    animation-delay: 1s;
+    fill: black;
+    opacity: 0;
+}
+
+#traducao_sigla, #botoes_logo {
+    animation: fadeIn 3s ease-in forwards;
+    animation-delay: 1s;
+    fill: black;
+    opacity: 0;
+}
+
+/* Mão inferior (da esquerda para a direita) */
+#mao_inferior {
+    animation: slideLeftToRight 2s ease-out forwards;
+    animation-delay: 2s; /* Começa depois que nome_defesa aparece */
+    opacity: 0;
+}
+
+/* Mão superior (da direita para a esquerda) */
+#mao_superior {
+    animation: slideRightToLeft 2s ease-out forwards;
+    animation-delay: 2s;
+    opacity: 0;
+}
+
+/* Mapa aparece depois das mãos */
+#mapa {
+    animation: fadeIn 3s ease-in forwards;
+    animation-delay: 2.5s; /* Começa depois que as mãos aparecem */
+    opacity: 0;
+}
