@@ -58,3 +58,15 @@ svg {
     animation-delay: 2.5s; /* Começa depois que as mãos aparecem */
     opacity: 0;
 }
+
+#saber_mais {
+    animation: slideLeftToRight 5s ease-out forwards;
+    animation-delay: 1s; /* Começa depois que as mãos aparecem */
+    opacity: 0;
+}
+
+#icone_video {
+    animation: slideLeftToRight 6s ease-out forwards;
+    animation-delay: 1s; /* Começa depois que as mãos aparecem */
+    opacity: 0;
+}
