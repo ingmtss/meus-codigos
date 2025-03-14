@@ -10,9 +10,6 @@ file_path = "Locais - Manaus.xlsx"
 # Carregar os dados do arquivo Excel
 dataset = pd.read_excel(file_path)
 
-# Verificar as primeiras linhas do DataFrame para garantir que as colunas estejam corretas
-print(dataset.head())
-
 # Substituir vírgulas por ponto e garantir que latitude e longitude sejam do tipo float
 dataset['LONGITUDE'] = dataset['LONGITUDE'].replace(',', '.', regex=True).astype(float)
 dataset['LATITUDE'] = dataset['LATITUDE'].replace(',', '.', regex=True).astype(float)
@@ -25,7 +22,8 @@ def get_icon_path(legenda):
         'Restaurante': "restaurante.png",
         'Local do Evento': "local_evento.png",
         'Sede da Defesa Civil': "defesa.png",
-        'Hotel': "hotel.png"
+        'Hotel': "hotel.png",
+        'Aeroporto': "aeroporto.png"
     }
     
     # Retorna o caminho para o ícone, ou um ícone padrão se não encontrar
@@ -37,6 +35,11 @@ mapa = folium.Map(
     zoom_start=12,
     tiles='CartoDB.VoyagerLabelsUnder'  # Tema CartoDB VoyagerLabelsUnder
 )
+
+# Armazenar os marcadores para adicionar ao painel
+markers = []  # Lista para armazenar marcadores
+marker_ids = []  # IDs dos marcadores para ligação com o JavaScript
+marker_names = []  # Nomes dos pontos para mostrar na lateral
 
 # Adicionar marcadores com ícones personalizados ao mapa
 for idx, row in dataset.iterrows():
@@ -63,7 +66,7 @@ for idx, row in dataset.iterrows():
             )
 
             # Criar o conteúdo do popup com descrição e foto
-            descricao = row['description'] if 'description' in row else "Descrição não disponível"
+            descricao = row['Localização'] if 'Localização' in row else "Descrição não disponível"
             photo_url = row['foto'] if 'foto' in row else None  # Coluna 'Foto' contendo o caminho da imagem
 
             # Construção do HTML para o popup
@@ -75,19 +78,81 @@ for idx, row in dataset.iterrows():
                 # Se houver uma foto, exibe a imagem no popup
                 popup_content += f'<img src="{photo_url}" alt="Foto do Local" style="width:100%; height:auto;">'
             
-            folium.Marker(
+            # Criar o marcador
+            marker = folium.Marker(
                 location=[row['LATITUDE'], row['LONGITUDE']], 
                 icon=icon, 
                 popup=folium.Popup(popup_content, max_width=300)  # Exibe o popup com conteúdo HTML
-            ).add_to(mapa)
+            )
+
+            # Adiciona o marcador ao mapa
+            marker.add_to(mapa)
+
+            # Adiciona os detalhes do marcador para usar na caixa lateral
+            marker_ids.append(f"marker_{idx}")
+            markers.append(marker)
+            marker_names.append(row['name'])
 
         except Exception as e:
             print(f"Erro ao carregar o ícone para {row['name']}: {e}")
     else:
         print(f"Ícone não encontrado para {legenda}: {icon_path}")
 
+# Função para criar a caixa lateral com os pontos
+def generate_sidebar(markers, marker_ids, marker_names):
+    sidebar_content = """
+    <div id="sidebar" style="width: 300px; height: 100%; position: absolute; top: 0; left: 0; background-color: #f8f9fa; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); overflow-y: scroll; z-index: 9999; padding: 10px;">
+        <h2 style="font-family: Arial, sans-serif; color: #007bff;">Pesquisa</h2>
+        <input type="text" id="search" placeholder="Buscar por nome" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #ccc; transition: 0.3s;">
+        <ul id="points-list" style="list-style-type: none; padding-left: 10px;">
+    """
+    for idx, name in enumerate(marker_names):
+        sidebar_content += f"""
+        <li onclick="centerMap({markers[idx].location[0]}, {markers[idx].location[1]}, '{marker_ids[idx]}')"
+            style="padding: 8px; margin-bottom: 5px; border-radius: 4px; cursor: pointer; transition: 0.3s; background-color: #f1f1f1;">
+            <b>{name}</b>
+        </li>
+        """
+    
+    sidebar_content += """
+        </ul>
+    </div>
+    <script>
+        // Função para centralizar o mapa em um ponto e abrir o popup
+        function centerMap(lat, lng, markerId) {
+            map.setView([lat, lng], 14);  // Centraliza o mapa no ponto
+            setTimeout(function() {
+                var marker = map._layers[markerId];  // Obtém o marcador com o ID
+                marker.openPopup();  // Abre o popup
+            }, 500);  // Espera meio segundo para garantir que o mapa foi centralizado
+        }
+
+        // Filtra os pontos baseado no texto de busca
+        document.getElementById('search').addEventListener('input', function() {
+            let searchText = this.value.toLowerCase();
+            let items = document.querySelectorAll('#points-list li');
+            items.forEach(item => {
+                let name = item.innerText.toLowerCase();
+                if (name.includes(searchText)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+    """
+
+    return sidebar_content
+
+# Gerar o conteúdo da caixa lateral
+sidebar_html = generate_sidebar(markers, marker_ids, marker_names)
+
+# Adicionar o conteúdo da caixa lateral ao mapa
+mapa.get_root().html.add_child(folium.Element(sidebar_html))
+
 # Salvar o mapa como um arquivo HTML
-mapa.save('mapa_icons_local.html')
+mapa.save('mapa.html')
 
 # Exibir mensagem para indicar que o mapa foi gerado com sucesso
-print("Mapa HTML com ícones personalizados gerado com sucesso.")
+print("Mapa HTML com ícones personalizados, caixa lateral e popups automáticos gerado com sucesso.")
